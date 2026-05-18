@@ -108,7 +108,7 @@ function SidebarContent({ onClose }) {
       </div>
 
       {/* ── Nav ──────────────────────────────────────────────── */}
-      <div style={{ flex:1, overflowY:'auto', padding:'14px 10px 8px' }}>
+      <div className="no-scrollbar" style={{ flex:1, overflowY:'auto', padding:'14px 10px 8px' }}>
         <SectionLabel text="Módulos"/>
         <div style={{ display:'flex', flexDirection:'column', marginBottom:18 }}>
           {navModules.map(it => <NavItem key={it.path} {...it} badge={badges[it.badgeKey]} onClose={onClose}/>)}

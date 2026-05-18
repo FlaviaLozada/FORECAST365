@@ -2,11 +2,18 @@ import { createContext, useContext, useState } from 'react'
 import { toast } from '../lib/toast'
 import { parseFile, processRows, downloadSampleData } from '../lib/dataEngine'
 
+const initialSuppliers = [
+  { id:'sup1', name:'FilterTech China Co.',   country:'China',  leadTime:'45 días', reliability:95, activeOrders:2 },
+  { id:'sup2', name:'Industrial Filters USA', country:'USA',    leadTime:'35 días', reliability:98, activeOrders:1 },
+  { id:'sup3', name:'Filtros Brasil Ltda',    country:'Brasil', leadTime:'30 días', reliability:92, activeOrders:1 },
+  { id:'sup4', name:'COSCO Industrial Parts', country:'China',  leadTime:'60 días', reliability:90, activeOrders:1 },
+]
+
 const initialProducts = [
-  { id:'p1', name:'Filtro de Aire FA-2000',       category:'Automotriz', currentStock:45,  optimalStock:150, currentPrice:245, recommendedPrice:265, costUSD:35, leadTime:'45 días', avgDemand:120, status:'critical' },
-  { id:'p2', name:'Filtro de Aceite OL-500',       category:'Automotriz', currentStock:280, optimalStock:200, currentPrice:180, recommendedPrice:185, costUSD:24, leadTime:'30 días', avgDemand:85,  status:'overstock' },
-  { id:'p3', name:'Filtro Hidráulico HF-100',     category:'Industrial', currentStock:190, optimalStock:180, currentPrice:420, recommendedPrice:420, costUSD:58, leadTime:'60 días', avgDemand:60,  status:'optimal' },
-  { id:'p4', name:'Filtro de Combustible FC-300', category:'Automotriz', currentStock:95,  optimalStock:120, currentPrice:195, recommendedPrice:210, costUSD:28, leadTime:'35 días', avgDemand:95,  status:'warning' },
+  { id:'p1', name:'Filtro de Aire FA-2000',       category:'Automotriz', currentStock:45,  optimalStock:150, currentPrice:245, recommendedPrice:265, costUSD:35, supplierId:'sup1', avgDemand:120, status:'critical' },
+  { id:'p2', name:'Filtro de Aceite OL-500',       category:'Automotriz', currentStock:280, optimalStock:200, currentPrice:180, recommendedPrice:185, costUSD:24, supplierId:'sup3', avgDemand:85,  status:'overstock' },
+  { id:'p3', name:'Filtro Hidráulico HF-100',     category:'Industrial', currentStock:190, optimalStock:180, currentPrice:420, recommendedPrice:420, costUSD:58, supplierId:'sup4', avgDemand:60,  status:'optimal' },
+  { id:'p4', name:'Filtro de Combustible FC-300', category:'Automotriz', currentStock:95,  optimalStock:120, currentPrice:195, recommendedPrice:210, costUSD:28, supplierId:'sup2', avgDemand:95,  status:'warning' },
 ]
 
 const initialShipments = [
@@ -22,6 +29,7 @@ export const useAppContext = () => useContext(AppContext)
 
 export function AppProvider({ children }) {
   const [products, setProducts]         = useState(initialProducts)
+  const [suppliers]                     = useState(initialSuppliers)
   const [shipments, setShipments]       = useState(initialShipments)
   const [exchangeRate]                  = useState(initialExchangeRate)
   const [processedData, setProcessedData] = useState(null)
@@ -56,7 +64,7 @@ export function AppProvider({ children }) {
 
   return (
     <AppContext.Provider value={{
-      products, shipments, exchangeRate,
+      products, suppliers, shipments, exchangeRate,
       updateProduct, applyPriceChange, addShipment,
       processedData, isUploading, uploadFile, clearUploadedData,
       downloadSampleData,

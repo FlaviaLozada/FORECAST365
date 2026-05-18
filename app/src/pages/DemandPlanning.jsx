@@ -15,12 +15,12 @@ import * as XLSX from 'xlsx'
 const SS_FACTOR = { A: 1.8, B: 1.4, C: 1.1 }
 
 const BUCKETS = [
-  { label: '< 7 días',   name: 'Crítico',    color: '#ef4444', min: 0,   max: 7          },
-  { label: '7 – 15 d',   name: 'Ajustado',   color: '#f97316', min: 7,   max: 15         },
-  { label: '15 – 30 d',  name: 'Saludable',  color: '#22c55e', min: 15,  max: 30         },
-  { label: '30 – 60 d',  name: 'Cómodo',     color: '#16a34a', min: 30,  max: 60         },
-  { label: '60 – 120 d', name: 'Holgado',    color: '#a78bfa', min: 60,  max: 120        },
-  { label: '> 120 días', name: 'Sobrestock', color: '#dc2626', min: 120, max: Infinity   },
+  { label: '< 0.5 mes',   name: 'Crítico',    color: '#ef4444', min: 0,   max: 0.5      },
+  { label: '0.5 – 1 mes', name: 'Ajustado',   color: '#f97316', min: 0.5, max: 1        },
+  { label: '1 – 2 meses', name: 'Saludable',  color: '#22c55e', min: 1,   max: 2        },
+  { label: '2 – 3 meses', name: 'Cómodo',     color: '#16a34a', min: 2,   max: 3        },
+  { label: '3 – 5 meses', name: 'Holgado',    color: '#a78bfa', min: 3,   max: 5        },
+  { label: '> 5 meses',   name: 'Sobrestock', color: '#dc2626', min: 5,   max: Infinity },
 ]
 
 const ABC_STYLE = {
@@ -96,10 +96,12 @@ function CircularGauge({ value, size = 84 }) {
 }
 
 function ProductDrawer({ product, onClose }) {
-  const leadDays = parseInt(product.leadTime) || 45
+  const { suppliers } = useAppContext()
+  const supplier = suppliers.find(s => s.id === product.supplierId)
+  const leadDays = parseInt(supplier?.leadTime) || 45
   const ss = Math.round(product.avgDemand * (leadDays / 30) * (SS_FACTOR[product.abc] || 1.2))
-  const coverageDays = product.avgDemand > 0
-    ? Math.round((product.currentStock / product.avgDemand) * 30) : 0
+  const coverageMonths = product.avgDemand > 0
+    ? product.currentStock / product.avgDemand : 0
   const orderQty = Math.max(0, product.optimalStock - product.currentStock)
   const stockPct = product.optimalStock > 0
     ? Math.min(100, Math.round((product.currentStock / product.optimalStock) * 100)) : 0
@@ -155,7 +157,7 @@ function ProductDrawer({ product, onClose }) {
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:16 }}>
           {[
             { label:'Stock actual', value: product.currentStock, sub:`Óptimo: ${product.optimalStock}` },
-            { label:'Cobertura',    value: `${coverageDays}d`,   sub:`Lead time: ${leadDays}d`          },
+            { label:'Cobertura',    value: `${coverageMonths.toFixed(1)} m`, sub:`Lead time: ${leadDays}d` },
             { label:'Stock seg.',   value: ss,                   sub:`×${SS_FACTOR[product.abc]||1.2}`  },
           ].map((m, i) => (
             <div key={i} style={{ background:'#f8fafc', borderRadius:10, padding:'10px 12px' }}>
@@ -213,7 +215,7 @@ function ProductDrawer({ product, onClose }) {
 }
 
 export default function DemandPlanning() {
-  const { products } = useAppContext()
+  const { products, suppliers } = useAppContext()
   const [paretoMode, setParetoMode]     = useState('combinado')
   const [skuFilter, setSkuFilter]       = useState('todos')
   const [selected, setSelected]         = useState(null)
@@ -230,10 +232,11 @@ export default function DemandPlanning() {
       cum += p._metric
       const revPct = totalMetric ? cum / totalMetric : 0
       const abc = revPct <= 0.70 ? 'A' : revPct <= 0.90 ? 'B' : 'C'
-      const leadDays = parseInt(p.leadTime) || 45
-      const coverageDays = p.avgDemand > 0 ? Math.round((p.currentStock / p.avgDemand) * 30) : 0
+      const sup      = suppliers.find(s => s.id === p.supplierId)
+      const leadDays = parseInt(sup?.leadTime) || 45
+      const coverageMonths = p.avgDemand > 0 ? p.currentStock / p.avgDemand : 0
       const ss = Math.round(p.avgDemand * (leadDays / 30) * (SS_FACTOR[abc] || 1.2))
-      return { ...p, abc, revPct, coverageDays, ss, leadDays }
+      return { ...p, abc, revPct, coverageMonths, ss, leadDays }
     })
   }, [products, paretoMode])
 
@@ -272,12 +275,12 @@ export default function DemandPlanning() {
 
   const coverageGroups = useMemo(() =>
     BUCKETS.map(b => {
-      const items = classified.filter(p => p.coverageDays >= b.min && p.coverageDays < b.max)
+      const items = classified.filter(p => p.coverageMonths >= b.min && p.coverageMonths < b.max)
       return { ...b, count: items.length, a: items.filter(p=>p.abc==='A').length, b2: items.filter(p=>p.abc==='B').length, c: items.filter(p=>p.abc==='C').length }
     }), [classified])
 
   const maxCovCount   = Math.max(...coverageGroups.map(g => g.count), 1)
-  const criticalCount = classified.filter(p => p.coverageDays < 15).length
+  const criticalCount = classified.filter(p => p.coverageMonths < 0.5).length
 
   const purchasePlan = useMemo(() => {
     const toOrder  = classified.filter(p => p.status==='critical'||p.status==='warning')
@@ -286,9 +289,9 @@ export default function DemandPlanning() {
   }, [classified])
 
   const actions = useMemo(() => ({
-    acelerar: classified.filter(p => p.coverageDays < 7).length,
-    mantener: classified.filter(p => p.coverageDays >= 7 && p.coverageDays <= 90).length,
-    reducir:  classified.filter(p => p.coverageDays > 120).length,
+    acelerar: classified.filter(p => p.coverageMonths < 0.5).length,
+    mantener: classified.filter(p => p.coverageMonths >= 0.5 && p.coverageMonths <= 3).length,
+    reducir:  classified.filter(p => p.coverageMonths > 5).length,
   }), [classified])
 
   const serviceLevel = useMemo(() => {
@@ -347,11 +350,11 @@ export default function DemandPlanning() {
     XLSX.utils.book_append_sheet(wb, wsDetalle, 'Detalle')
 
     const wsCobertura = XLSX.utils.aoa_to_sheet([
-      ['Producto','Clase ABC','Stock','Cobertura (días)','Stock Seg.','Estado'],
-      ...classified.map(p => [p.name, p.abc, p.currentStock, p.coverageDays, p.ss,
-        p.coverageDays < 7  ? 'CRÍTICO'  :
-        p.coverageDays < 15 ? 'AJUSTADO' :
-        p.coverageDays < 30 ? 'SALUDABLE': 'CÓMODO']),
+      ['Producto','Clase ABC','Stock','Cobertura (meses)','Stock Seg.','Estado'],
+      ...classified.map(p => [p.name, p.abc, p.currentStock, +p.coverageMonths.toFixed(2), p.ss,
+        p.coverageMonths < 0.5 ? 'CRÍTICO'   :
+        p.coverageMonths < 1   ? 'AJUSTADO'  :
+        p.coverageMonths < 2   ? 'SALUDABLE' : 'CÓMODO']),
     ])
     XLSX.utils.book_append_sheet(wb, wsCobertura, 'Cobertura')
 
@@ -464,7 +467,7 @@ export default function DemandPlanning() {
                 <div>
                   <CardTitle className="text-sm sm:text-base">Análisis de cobertura</CardTitle>
                   <CardDescription className="text-xs mt-0.5">
-                    Cobertura = stock disponible ÷ demanda mensual · vs lead time del proveedor
+                    Cobertura = stock disponible ÷ demanda mensual (en meses) · vs lead time del proveedor
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2.5 text-[10px] text-gray-500 flex-wrap">
@@ -633,7 +636,7 @@ export default function DemandPlanning() {
                       <div className="flex justify-between">
                         <span>Buffer objetivo</span>
                         <span className="font-semibold text-gray-700">
-                          {cls==='A'?'~25 días de cobertura':cls==='B'?'~15 días de cobertura':'reposición bajo demanda'}
+                          {cls==='A'?'~1 mes de cobertura':cls==='B'?'~0.5 mes de cobertura':'reposición bajo demanda'}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -716,7 +719,7 @@ export default function DemandPlanning() {
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     {label:'Stock',     value: p.currentStock},
-                    {label:'Cobertura', value:`${p.coverageDays}d`, warn: p.coverageDays < 15},
+                    {label:'Cobertura', value:`${p.coverageMonths.toFixed(1)} m`, warn: p.coverageMonths < 0.5},
                     {label:'Lead time', value:`${p.leadDays}d`},
                   ].map((m,j) => (
                     <div key={j} className="text-center rounded-lg bg-gray-50 p-2">
@@ -766,8 +769,8 @@ export default function DemandPlanning() {
                     <td className="py-3 px-3 text-right font-mono font-semibold">{p.currentStock}</td>
                     <td className="py-3 px-3 text-right font-mono text-gray-400">{p.ss}</td>
                     <td className="py-3 px-3 text-right">
-                      <span className="font-semibold" style={{color:p.coverageDays<15?'#f97316':'#1e293b'}}>
-                        {p.coverageDays}d{p.coverageDays<15?' ⚠':''}
+                      <span className="font-semibold" style={{color:p.coverageMonths<0.5?'#f97316':'#1e293b'}}>
+                        {p.coverageMonths.toFixed(1)} m{p.coverageMonths<0.5?' ⚠':''}
                       </span>
                     </td>
                     <td className="py-3 px-3 text-right font-mono text-gray-400">{p.leadDays}d</td>

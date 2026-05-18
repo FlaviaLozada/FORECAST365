@@ -76,6 +76,21 @@ function KpiFlat({ label, value, sub, sub2, spark, sparkColor, arrow, arrowColor
   )
 }
 
+// ─── Incoterm descriptions ────────────────────────────────────────────────
+const INCOTERM_INFO = {
+  EXW: { emoji:'🏭', texto:'Retirás la mercadería en la fábrica del proveedor. Todo el transporte, seguro y aduana corre completamente por tu cuenta.' },
+  FCA: { emoji:'🚛', texto:'El proveedor entrega al transportista que vos elegís. Desde ahí el riesgo y los costos son tuyos.' },
+  FAS: { emoji:'⚓', texto:'El proveedor deja la carga al costado del barco en el puerto de origen. Vos pagás la carga al barco, el flete y la aduana.' },
+  FOB: { emoji:'🚢', texto:'El proveedor paga hasta poner la carga dentro del barco. El flete, el seguro y la aduana de destino corren por tu cuenta.' },
+  CFR: { emoji:'🌊', texto:'El proveedor paga el flete hasta el puerto de destino, pero el seguro lo pagás vos. La aduana también es tuya.' },
+  CIF: { emoji:'🛡️', texto:'El proveedor paga el flete y el seguro hasta el puerto de destino. La aduana y el transporte interno corren por tu cuenta.' },
+  CPT: { emoji:'📦', texto:'El proveedor paga el flete hasta el lugar de destino acordado. El seguro y los riesgos del viaje son tuyos.' },
+  CIP: { emoji:'🔒', texto:'El proveedor paga el flete y el seguro hasta el destino acordado. Solo la aduana y descarga final corren por tu cuenta.' },
+  DPU: { emoji:'🏗️', texto:'El proveedor entrega la carga descargada en el lugar de destino. Solo los trámites de importación quedan de tu lado.' },
+  DAP: { emoji:'🎯', texto:'El proveedor entrega la carga en tu puerta lista para descargar. Solo pagás los impuestos y trámites de importación.' },
+  DDP: { emoji:'✅', texto:'El proveedor se hace cargo de absolutamente todo — flete, seguro e impuestos de importación. La carga llega lista a tu depósito.' },
+}
+
 // ─── Nueva orden drawer ────────────────────────────────────────────────────
 function NuevaOrdenDrawer({ onClose, onAdd }) {
   const [form, setForm] = useState({ supplier:'', origin:'', route:'Marítimo', items:0, skus:0, valueUsd:0, eta:'', incoterm:'FOB' })
@@ -131,8 +146,30 @@ function NuevaOrdenDrawer({ onClose, onAdd }) {
             <label className="block text-xs font-semibold text-gray-600 mb-1">Incoterm</label>
             <select value={form.incoterm} onChange={e => upd('incoterm', e.target.value)}
               className="w-full h-10 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/40">
-              {['FOB','CIF','EXW','DAP'].map(i => <option key={i}>{i}</option>)}
+              <optgroup label="── Cualquier medio de transporte ──">
+                <option value="EXW">EXW — Ex Works (en fábrica del proveedor)</option>
+                <option value="FCA">FCA — Free Carrier (entrega al transportista)</option>
+                <option value="CPT">CPT — Carriage Paid To (flete pagado hasta destino)</option>
+                <option value="CIP">CIP — Carriage &amp; Insurance Paid (flete + seguro)</option>
+                <option value="DAP">DAP — Delivered at Place (entregado en destino)</option>
+                <option value="DPU">DPU — Delivered at Place Unloaded (descargado en destino)</option>
+                <option value="DDP">DDP — Delivered Duty Paid (todo incluido, impuestos también)</option>
+              </optgroup>
+              <optgroup label="── Solo transporte marítimo ──">
+                <option value="FAS">FAS — Free Alongside Ship (al costado del barco)</option>
+                <option value="FOB">FOB — Free On Board (puesto en el barco)</option>
+                <option value="CFR">CFR — Cost &amp; Freight (costo + flete marítimo)</option>
+                <option value="CIF">CIF — Cost, Insurance &amp; Freight (costo + seguro + flete)</option>
+              </optgroup>
             </select>
+            {INCOTERM_INFO[form.incoterm] && (
+              <div className="mt-2 flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <span className="text-base shrink-0">{INCOTERM_INFO[form.incoterm].emoji}</span>
+                <p className="text-xs text-blue-800 leading-relaxed">
+                  <strong>{form.incoterm}:</strong> {INCOTERM_INFO[form.incoterm].texto}
+                </p>
+              </div>
+            )}
           </div>
         </form>
         <div className="px-5 py-4 border-t flex gap-3">

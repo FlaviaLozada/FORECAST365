@@ -165,38 +165,75 @@ export default function Inventario() {
         ))}
       </div>
 
-      {/* ── Two-column ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_310px] gap-5 mb-5">
-
-        {/* Calidad de datos */}
-        <Card className="border-2">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-sm sm:text-base">Calidad de datos del catálogo</CardTitle>
-            <CardDescription className="text-xs">
-              Completitud por campo · meta 95% para activar módulos avanzados
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {DATA_QUALITY.map((d, i) => {
-              const col = qualColor(d.pct)
+      {/* ── Stock por almacén — CENTRAL ── */}
+      <Card className="border-2 mb-5">
+        <CardHeader className="pb-2">
+          <div className="flex items-start justify-between gap-2 flex-wrap">
+            <div>
+              <CardTitle className="text-base sm:text-lg">Stock por almacén</CardTitle>
+              <CardDescription className="text-xs mt-0.5">
+                Distribución de {totalStock} unidades en {WAREHOUSES.length} ubicaciones
+              </CardDescription>
+            </div>
+            <span className="text-2xl font-black text-indigo-600">{totalStock} u</span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+            {WAREHOUSES.map((w, i) => {
+              const units = Math.round(totalStock * w.pct / 100)
               return (
-                <div key={i} className="group">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-medium text-gray-700">{d.field}</span>
-                    <span className="text-xs font-bold" style={{ color: col }}>{d.pct}%</span>
+                <div key={i}>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800 leading-none">{w.name}</p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">{w.city}</p>
+                    </div>
+                    <div className="text-right shrink-0 ml-3">
+                      <p className="text-base font-black text-gray-900">{units}</p>
+                      <p className="text-[10px] text-gray-400">{w.pct}%</p>
+                    </div>
                   </div>
                   <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full transition-all duration-700"
-                      style={{ width:`${d.pct}%`, background: `linear-gradient(90deg, ${col}cc, ${col})` }}/>
+                    <div className="h-full rounded-full transition-all duration-500"
+                      style={{ width:`${w.pct}%`, background: w.color }}/>
                   </div>
                 </div>
               )
             })}
-            {/* Legend */}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Fila inferior: Calidad de datos + Estructuración ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5 mb-5">
+
+        {/* Calidad de datos — más compacta */}
+        <Card className="border-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Calidad de datos del catálogo</CardTitle>
+            <CardDescription className="text-xs">
+              Completitud por campo · meta 95% para activar módulos avanzados
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {DATA_QUALITY.map((d, i) => {
+              const col = qualColor(d.pct)
+              return (
+                <div key={i} className="flex items-center gap-3">
+                  <span className="text-[11px] text-gray-600 w-40 shrink-0">{d.field}</span>
+                  <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-700"
+                      style={{ width:`${d.pct}%`, background: `linear-gradient(90deg, ${col}cc, ${col})` }}/>
+                  </div>
+                  <span className="text-[11px] font-bold w-9 text-right shrink-0" style={{ color: col }}>{d.pct}%</span>
+                </div>
+              )
+            })}
             <div className="flex items-center gap-4 pt-2 text-[10px] text-gray-400 border-t">
               {[['#22c55e','≥ 90% Óptimo'],['#f97316','65–89% Mejorar'],['#ef4444','< 65% Crítico']].map(([c,l])=>(
                 <span key={l} className="flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-full inline-block" style={{background:c}}/>
+                  <span className="w-2 h-2 rounded-full inline-block" style={{background:c}}/>
                   {l}
                 </span>
               ))}
@@ -204,73 +241,38 @@ export default function Inventario() {
           </CardContent>
         </Card>
 
-        {/* Right column */}
-        <div className="space-y-4">
-
-          {/* Estructuración general */}
-          <Card className="border-2">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <p className="text-sm font-bold text-gray-900">Estructuración general</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Datos limpios y relacionados</p>
-                </div>
-                <CircularGauge value={avgQuality}/>
+        {/* Estructuración general */}
+        <Card className="border-2">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm font-bold text-gray-900">Estructuración general</p>
+                <p className="text-xs text-gray-400 mt-0.5">Datos limpios y relacionados</p>
               </div>
-              <div className="space-y-2">
-                {[
-                  { label:'SKUs totales',           value: products.length,  valueColor:'text-gray-900' },
-                  { label:'SKUs activos',            value: products.filter(p=>p.status!=='critical'||p.currentStock>0).length, valueColor:'text-gray-900' },
-                  { label:'Precios al día',          value: products.filter(p=>p.currentPrice===p.recommendedPrice).length, valueColor:'text-green-600' },
-                  { label:'Inconsistencias',         value: products.filter(p=>p.currentPrice!==p.recommendedPrice).length, valueColor:'text-orange-500' },
-                ].map((s,i) => (
-                  <div key={i} className="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
-                    <span className="text-xs text-gray-500">{s.label}</span>
-                    <span className={cn('text-sm font-bold', s.valueColor)}>{s.value}</span>
-                  </div>
-                ))}
-              </div>
-              {avgQuality < 95 && (
-                <div className="mt-4 rounded-xl bg-amber-50 border border-amber-200 p-3">
-                  <p className="text-xs text-amber-700 font-medium">
-                    ⚡ Alcanzá el 95% de completitud para desbloquear todos los módulos avanzados
-                  </p>
+              <CircularGauge value={avgQuality}/>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label:'SKUs totales',     value: products.length,  valueColor:'text-gray-900' },
+                { label:'SKUs activos',      value: products.filter(p=>p.status!=='critical'||p.currentStock>0).length, valueColor:'text-gray-900' },
+                { label:'Precios al día',    value: products.filter(p=>p.currentPrice===p.recommendedPrice).length, valueColor:'text-green-600' },
+                { label:'Inconsistencias',   value: products.filter(p=>p.currentPrice!==p.recommendedPrice).length, valueColor:'text-orange-500' },
+              ].map((s,i) => (
+                <div key={i} className="flex justify-between items-center py-1.5 border-b border-gray-50 last:border-0">
+                  <span className="text-xs text-gray-500">{s.label}</span>
+                  <span className={cn('text-sm font-bold', s.valueColor)}>{s.value}</span>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Stock por almacén */}
-          <Card className="border-2">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Stock por almacén</CardTitle>
-              <CardDescription className="text-xs">Distribución de {totalStock} unidades</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3.5">
-              {WAREHOUSES.map((w,i) => {
-                const units = Math.round(totalStock * w.pct / 100)
-                return (
-                  <div key={i}>
-                    <div className="flex justify-between items-center mb-1">
-                      <div>
-                        <p className="text-xs font-semibold text-gray-800 leading-none">{w.name}</p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">{w.city}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-xs font-bold text-gray-900">{units}</p>
-                        <p className="text-[10px] text-gray-400">{w.pct}%</p>
-                      </div>
-                    </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full transition-all duration-500"
-                        style={{ width:`${w.pct}%`, background: w.color }}/>
-                    </div>
-                  </div>
-                )
-              })}
-            </CardContent>
-          </Card>
-        </div>
+              ))}
+            </div>
+            {avgQuality < 95 && (
+              <div className="mt-3 rounded-xl bg-amber-50 border border-amber-200 p-3">
+                <p className="text-xs text-amber-700 font-medium">
+                  ⚡ Alcanzá el 95% para desbloquear módulos avanzados
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* ── Catálogo estructurado ── */}
