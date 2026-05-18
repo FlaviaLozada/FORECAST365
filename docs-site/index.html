@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Forecast365 — Documentación del Sistema</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #020B36; --purple: #4D17FC; --purple-light: #7B59FF;
+      --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
+      --bg: #f8fafc; --white: #ffffff;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+    .header { background: var(--navy); color: white; padding: 48px 24px 40px; text-align: center; }
+    .header-badge { display: inline-block; background: rgba(77,23,252,0.35); border: 1px solid rgba(123,89,255,0.4); color: #c4b5fd; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 14px; border-radius: 99px; margin-bottom: 18px; }
+    .header h1 { font-size: clamp(26px, 5vw, 42px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 10px; }
+    .header h1 span { color: #a78bfa; }
+    .header p { color: rgba(255,255,255,0.6); font-size: 16px; margin-bottom: 28px; }
+    .header-meta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+    .meta-chip { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.75); font-size: 13px; padding: 5px 14px; border-radius: 8px; }
+    .meta-chip a { color: #a78bfa; text-decoration: none; }
+    .meta-chip a:hover { text-decoration: underline; }
+
+    .layout { display: flex; max-width: 1100px; margin: 0 auto; gap: 32px; padding: 40px 20px; align-items: flex-start; }
+
+    .toc { width: 220px; flex-shrink: 0; position: sticky; top: 24px; }
+    .toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 10px; }
+    .toc ul { list-style: none; }
+    .toc li { margin-bottom: 2px; }
+    .toc a { display: block; font-size: 13px; color: var(--muted); text-decoration: none; padding: 4px 10px; border-radius: 6px; border-left: 2px solid transparent; transition: all .15s; }
+    .toc a:hover { color: var(--purple); background: #f0ebff; border-left-color: var(--purple); }
+    .toc .toc-sub { padding-left: 20px; font-size: 12px; }
+
+    .content { flex: 1; min-width: 0; }
+    section { margin-bottom: 48px; scroll-margin-top: 24px; }
+    h2 { font-size: 22px; font-weight: 700; color: var(--navy); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--border); }
+    h3 { font-size: 17px; font-weight: 700; color: var(--text); margin: 28px 0 10px; }
+    p { margin-bottom: 12px; color: #334155; font-size: 15px; }
+
+    .module-card { background: var(--white); border: 1.5px solid var(--border); border-radius: 14px; padding: 22px 24px; margin-bottom: 16px; }
+    .module-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .module-icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-size: 18px; flex-shrink: 0; }
+    .module-card-header h3 { margin: 0; font-size: 16px; }
+    .module-card-header .path { font-size: 11px; color: var(--muted); background: var(--bg); border: 1px solid var(--border); padding: 2px 8px; border-radius: 5px; font-family: monospace; }
+    .purpose { font-size: 14px; color: var(--muted); background: var(--bg); border-left: 3px solid var(--purple); padding: 8px 12px; border-radius: 0 8px 8px 0; margin-bottom: 14px; }
+
+    ul.feature-list { padding-left: 0; list-style: none; }
+    ul.feature-list li { font-size: 14px; color: #334155; padding: 4px 0 4px 20px; position: relative; }
+    ul.feature-list li::before { content: '→'; position: absolute; left: 0; color: var(--purple); font-weight: 700; }
+    ul.feature-list strong { color: var(--navy); }
+
+    .table-wrap { overflow-x: auto; margin: 16px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; background: white; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--border); }
+    th { background: #f1f5f9; text-align: left; padding: 10px 14px; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1.5px solid var(--border); }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: #334155; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #fafbfc; }
+    code { background: #f1f5f9; color: #7c3aed; padding: 1px 6px; border-radius: 4px; font-family: monospace; font-size: 12.5px; }
+
+    .flow { background: var(--navy); border-radius: 14px; padding: 28px; color: white; margin: 20px 0; }
+    .flow-steps { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }
+    .flow-step { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 600; text-align: center; }
+    .flow-arrow { color: #a78bfa; font-size: 22px; font-weight: 700; }
+    .flow-outputs { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+    .flow-output { background: rgba(77,23,252,0.3); border: 1px solid rgba(123,89,255,0.35); color: #c4b5fd; border-radius: 8px; padding: 6px 14px; font-size: 13px; }
+
+    .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 16px 0; }
+    .status-card { border-radius: 10px; padding: 14px 16px; }
+    .status-card .label { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+    .status-card .cond { font-size: 12px; opacity: .8; }
+    .s-red    { background: #fef2f2; color: #991b1b; border: 1.5px solid #fca5a5; }
+    .s-yellow { background: #fefce8; color: #92400e; border: 1.5px solid #fde68a; }
+    .s-green  { background: #f0fdf4; color: #166534; border: 1.5px solid #86efac; }
+    .s-orange { background: #fff7ed; color: #9a3412; border: 1.5px solid #fdba74; }
+
+    .tech-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .tech-pill { background: white; border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 600; color: var(--navy); }
+
+    .new-badge { display: inline-block; font-size: 10px; font-weight: 700; background: #4D17FC; color: white; padding: 1px 7px; border-radius: 99px; margin-left: 6px; vertical-align: middle; letter-spacing: 0.04em; }
+
+    .cta-box { background: linear-gradient(135deg, var(--navy) 0%, #1e1065 100%); border-radius: 16px; padding: 32px; text-align: center; color: white; margin-top: 48px; }
+    .cta-box h3 { font-size: 20px; margin-bottom: 8px; color: white; border: none; }
+    .cta-box p { color: rgba(255,255,255,0.65); margin-bottom: 20px; }
+    .cta-btn { display: inline-block; background: var(--purple); color: white; font-weight: 700; font-size: 15px; padding: 12px 32px; border-radius: 10px; text-decoration: none; transition: opacity .15s; }
+    .cta-btn:hover { opacity: .85; }
+
+    @media (max-width: 768px) { .toc { display: none; } .layout { padding: 24px 16px; } .module-card { padding: 16px; } }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-badge">Documentación del Sistema · v1.0.0</div>
+  <h1>Forecast<span>365</span></h1>
+  <p>Plataforma de Planificación de Demanda para PyMEs Latinoamericanas</p>
+  <div class="header-meta">
+    <span class="meta-chip">Mayo 2026</span>
+    <span class="meta-chip">Feria de Emprendimiento</span>
+    <span class="meta-chip">🔗 App: <a href="https://forecast365.netlify.app" target="_blank">forecast365.netlify.app</a></span>
+    <span class="meta-chip">📄 Docs: <a href="https://forecast365-docs.netlify.app" target="_blank">forecast365-docs.netlify.app</a></span>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="toc">
+    <p class="toc-title">Contenido</p>
+    <ul>
+      <li><a href="#que-es">¿Qué es Forecast365?</a></li>
+      <li><a href="#estructura">Estructura general</a></li>
+      <li><a href="#publica">Zona Pública</a></li>
+      <li style="margin-left:12px"><a class="toc-sub" href="#landing">Landing Page</a></li>
+      <li style="margin-left:12px"><a class="toc-sub" href="#login">Login / Registro</a></li>
+      <li><a href="#modulos">Módulos</a></li>
+      <li style="margin-left:12px"><a class="toc-sub" href="#resumen">Resumen</a></li>
+      <li style="margin-left:12px"><a class="toc-sub" href="#simulador">Simulador</a></li>
+      <li style="margin-left:12px"><a class="toc-sub" href="#demanda">Demanda</a></li>
+      <li style="margin-left:12px"><a class="toc-sub" href="#precios">Precios</a></li>
+      <li style="margin-left:12px"><a class="toc-sub" href="#logistica">Logística</a></li>
+      <li style="margin-left:12px"><a class="toc-sub" href="#inventario">Inventario</a></li>
+      <li><a href="#operacion">Operación</a></li>
+      <li style="margin-left:12px"><a class="toc-sub" href="#onboarding">Onboarding</a></li>
+      <li style="margin-left:12px"><a class="toc-sub" href="#alertas">Alertas</a></li>
+      <li style="margin-left:12px"><a class="toc-sub" href="#reportes">Reportes</a></li>
+      <li style="margin-left:12px"><a class="toc-sub" href="#data">Data Structuring</a></li>
+      <li style="margin-left:12px"><a class="toc-sub" href="#crudos">Datos crudos</a></li>
+      <li><a href="#flujo">Flujo de datos</a></li>
+      <li><a href="#estados">Estados de inventario</a></li>
+      <li><a href="#tech">Tecnologías</a></li>
+    </ul>
+  </nav>
+
+  <div class="content">
+
+    <section id="que-es">
+      <h2>¿Qué es Forecast365?</h2>
+      <p>Forecast365 es una plataforma SaaS (Software como Servicio) de inteligencia comercial diseñada para pequeñas y medianas empresas (PyMEs) de América Latina. Permite a los negocios importadores y distribuidores tomar decisiones basadas en datos reales: cuánto va a vender, cuándo reponer stock, cómo ajustar precios ante variaciones del tipo de cambio, y cómo optimizar su cadena logística.</p>
+      <p>El nombre <strong>"365"</strong> refleja el concepto de planificación anual continua — 365 días de visibilidad sobre el negocio.</p>
+    </section>
+
+    <section id="estructura">
+      <h2>Estructura general</h2>
+      <p>La aplicación tiene dos zonas principales:</p>
+      <ul class="feature-list">
+        <li><strong>Zona pública</strong> — Landing page, Login y Registro (sin autenticación requerida)</li>
+        <li><strong>Zona privada (App)</strong> — Todos los módulos del sistema (requiere estar autenticado)</li>
+      </ul>
+      <p style="margin-top:12px">La navegación se realiza a través de un <strong>sidebar (menú lateral)</strong> con dos secciones: <strong>Módulos</strong> (herramientas de análisis) y <strong>Operación</strong> (soporte y configuración).</p>
+    </section>
+
+    <section id="publica">
+      <h2>Zona Pública</h2>
+      <div class="module-card" id="landing">
+        <div class="module-card-header">
+          <div class="module-icon" style="background:#f0f9ff">🌐</div>
+          <div><h3>Landing Page</h3><span class="path">/</span></div>
+        </div>
+        <p class="purpose">Página principal de presentación. Es lo primero que ve cualquier visitante.</p>
+        <ul class="feature-list">
+          <li><strong>Hero principal:</strong> Título, subtítulo y dos botones — "Comenzar gratis" (registro) y "Ver demo" (login)</li>
+          <li><strong>Sección de métricas:</strong> 3 indicadores de impacto del producto</li>
+          <li><strong>Por qué Forecast365:</strong> 3 tarjetas con beneficios clave</li>
+          <li><strong>Características:</strong> 6 tarjetas de funcionalidades con íconos</li>
+          <li><strong>Testimonios:</strong> Carrusel animado que se desplaza automáticamente</li>
+          <li><strong>Animaciones:</strong> Todas las secciones se revelan al hacer scroll. Menú mobile como drawer desde la derecha.</li>
+        </ul>
+      </div>
+      <div class="module-card" id="login">
+        <div class="module-card-header">
+          <div class="module-icon" style="background:#f0fdf4">🔑</div>
+          <div><h3>Login / Registro</h3><span class="path">/login &nbsp; /register</span></div>
+        </div>
+        <p class="purpose">Acceso al sistema. En la versión demo, cualquier email y contraseña válidos permiten ingresar.</p>
+        <ul class="feature-list">
+          <li><strong>Login:</strong> Email + Contraseña → redirige a Resumen</li>
+          <li><strong>Registro:</strong> Nombre, Empresa, Email, Contraseña → crea cuenta y entra al sistema</li>
+          <li>Los datos del usuario se guardan en el <code>localStorage</code> del navegador</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="modulos">
+      <h2>Módulos del Sistema</h2>
+
+      <div class="module-card" id="resumen">
+        <div class="module-card-header">
+          <div class="module-icon" style="background:#eef2ff">✦</div>
+          <div><h3>Resumen Ejecutivo</h3><span class="path">/app/executive</span></div>
+        </div>
+        <p class="purpose">Dashboard principal. Vista general del negocio en un solo lugar.</p>
+        <ul class="feature-list">
+          <li><strong>Alerta de tipo de cambio:</strong> Barra que avisa sobre variaciones USD/BOB</li>
+          <li><strong>Selector de período:</strong> Hoy / Semana / Mes / Trimestre — cambia todos los KPIs</li>
+          <li><strong>KPI cards:</strong> Ingresos proyectados, Tipo de cambio, Precisión del pronóstico, Demanda</li>
+          <li><strong>Gráfica Revenue Projection:</strong> Ingresos reales vs. proyectados vs. IA</li>
+          <li><strong>Alertas activas:</strong> Tabla con productos problemáticos</li>
+          <li><strong>Exportar:</strong> Excel con 5 hojas (KPIs, Revenue, Alertas, Actividad, Tipo de cambio)</li>
+        </ul>
+      </div>
+
+      <div class="module-card" id="simulador">
+        <div class="module-card-header">
+          <div class="module-icon" style="background:#f0fdf4">🧮</div>
+          <div><h3>Simulador</h3><span class="path">/app/simulator</span></div>
+        </div>
+        <p class="purpose">Herramienta "what-if" para probar escenarios antes de tomar decisiones reales.</p>
+        <ul class="feature-list">
+          <li>Simula cambios en tipo de cambio, volumen de ventas, costos de importación</li>
+          <li>Muestra en tiempo real el impacto en margen, punto de equilibrio e ingresos</li>
+        </ul>
+      </div>
+
+      <div class="module-card" id="demanda">
+        <div class="module-card-header">
+          <div class="module-icon" style="background:#eff6ff">📈</div>
+          <div><h3>Demanda <span class="new-badge">MEJORADO</span></h3><span class="path">/app/demand-planning</span></div>
+        </div>
+        <p class="purpose">Módulo central de pronóstico con clasificación ABC y análisis de cobertura.</p>
+        <ul class="feature-list">
+          <li><strong>Pareto ABC del catálogo:</strong> Curva de Lorenz con zonas A/B sombreadas. Modos: Rotación / Margen / Combinado — cada uno clasifica los productos con una métrica diferente</li>
+          <li><strong>Análisis de cobertura:</strong> Barras horizontales por rango de días (&lt;7d crítico → &gt;120d sobrestock) con desglose A/B/C</li>
+          <li><strong>Plan de compras:</strong> Órdenes pendientes con inversión en USD/BOB — botón descarga Excel con 3 hojas (Resumen, Detalle, Cobertura)</li>
+          <li><strong>Acciones recomendadas:</strong> Acelerar / Mantener / Reducir con conteo de SKUs</li>
+          <li><strong>Clasificación ABC sidebar:</strong> Descripción por clase con conteo y % de valor</li>
+          <li><strong>Stock de seguridad:</strong> Factor ×1.8/1.4/1.1, Lead time y Buffer objetivo por clase</li>
+          <li><strong>Nivel de servicio:</strong> Gauge circular con porcentaje actual vs objetivo 95%</li>
+          <li><strong>Tabla SKUs:</strong> Filtros Todos/A/B/C/Críticos/Bajo SS, sparklines, cobertura coloreada, click abre drawer con pronóstico individual</li>
+          <li><strong>Recalcular:</strong> Ícono animado, recalcula pronósticos y muestra confirmación</li>
+        </ul>
+      </div>
+
+      <div class="module-card" id="precios">
+        <div class="module-card-header">
+          <div class="module-icon" style="background:#eff6ff">💲</div>
+          <div><h3>Precios <span class="new-badge">MEJORADO</span></h3><span class="path">/app/price-committee</span></div>
+        </div>
+        <p class="purpose">Comité de precios digital — "Comité de precios · [Mes Año]" con flujo de aprobación por lote.</p>
+        <ul class="feature-list">
+          <li><strong>Posponer reunión:</strong> Dropdown con opciones 1 semana / 2 semanas / 1 mes — calcula fecha exacta y muestra confirmación</li>
+          <li><strong>Cerrar comité:</strong> Aplica todos los ajustes pendientes</li>
+          <li><strong>Banner FX:</strong> Tipo de cambio actual vs referencia, Margen agregado con mini sparkline de tendencia</li>
+          <li><strong>KPI cards:</strong> Tipo de cambio, Ajustes pendientes, Margen agregado actual</li>
+          <li><strong>Análisis predictivo IA:</strong> Predicción USD/BOB a 30 días + precio óptimo por producto</li>
+          <li><strong>Tab Por proveedor:</strong> Grupos por proveedor/origen con SKUs afectados, costo erosionado, botones Sin ajuste / Revisar / Aprobar lote</li>
+          <li><strong>Tab Por familia:</strong> Grid de categorías con brecha de margen y cobertura del ajuste</li>
+          <li><strong>Tab Por SKU:</strong> Cards individuales + panel de Simulación de impacto (Sin ajuste vs Con ajuste)</li>
+          <li><strong>Tab USD/BOB:</strong> Gráfica del historial semanal</li>
+          <li><strong>Tab Historial:</strong> Registro de cambios de precio anteriores</li>
+        </ul>
+      </div>
+
+      <div class="module-card" id="logistica">
+        <div class="module-card-header">
+          <div class="module-icon" style="background:#f0fdf4">🚢</div>
+          <div><h3>Logística <span class="new-badge">MEJORADO</span></h3><span class="path">/app/logistics</span></div>
+        </div>
+        <p class="purpose">Seguimiento de envíos y gestión de la cadena de suministro.</p>
+        <ul class="feature-list">
+          <li><strong>Tablero logístico:</strong> Descarga Excel con 3 hojas — Envíos (detalles completos), KPIs, Proveedores</li>
+          <li><strong>Nueva Orden:</strong> Formulario drawer para registrar pedidos (proveedor, origen, ETA, ruta, incoterm)</li>
+          <li><strong>KPI cards:</strong> En tránsito, Valor en tránsito USD/BOB, Próxima llegada, Embarques con retraso</li>
+          <li><strong>Timeline de etapas:</strong> Pedido → Producción → Tránsito → Aduana → Recibido</li>
+          <li><strong>Insights IA:</strong> Recomendaciones de optimización de rutas</li>
+          <li><strong>Rutas y Proveedores</strong> con estadísticas de desempeño</li>
+        </ul>
+      </div>
+
+      <div class="module-card" id="inventario">
+        <div class="module-card-header">
+          <div class="module-icon" style="background:#eef2ff">📦</div>
+          <div><h3>Inventario <span class="new-badge">NUEVO</span></h3><span class="path">/app/inventario</span></div>
+        </div>
+        <p class="purpose">Catálogo estructurado con calidad de datos, distribución por almacén y tabla filtrable.</p>
+        <ul class="feature-list">
+          <li><strong>KPI strip:</strong> SKUs en catálogo, Stock total, Precios actualizados, Con ajuste pendiente</li>
+          <li><strong>Calidad de datos del catálogo:</strong> 10 barras con % de completitud por campo — verde ≥90%, naranja 65-89%, rojo &lt;65%</li>
+          <li><strong>Estructuración general:</strong> Gauge circular con promedio de calidad + stats detallados + alerta si &lt;95%</li>
+          <li><strong>Stock por almacén:</strong> 6 ubicaciones (Santa Cruz, La Paz, El Alto, Cochabamba) con barras proporcionales</li>
+          <li><strong>Catálogo estructurado:</strong> Tabla con SKU, Producto, Marca (badge), Aplicación vehicular, Stock, Cobertura coloreada, Safety Stock, Margen %, Clase ABC</li>
+          <li><strong>Búsqueda</strong> por SKU/marca/nombre + <strong>filtro por marca</strong> (TECFIL, WEGA, BALDWIN, FLEETGUARD)</li>
+          <li><strong>Exportar catálogo:</strong> Descarga Excel con todo el catálogo estructurado</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="operacion">
+      <h2>Operación</h2>
+
+      <div class="module-card" id="onboarding">
+        <div class="module-card-header">
+          <div class="module-icon" style="background:#fdf4ff">🚀</div>
+          <div><h3>Onboarding</h3><span class="path">/app/onboarding</span></div>
+        </div>
+        <p class="purpose">Guía de implementación paso a paso para clientes nuevos.</p>
+        <ul class="feature-list">
+          <li><strong>Progreso:</strong> 6 pasos secuenciales con barra de avance visual</li>
+          <li><strong>Agendar revisión:</strong> Formulario drawer para programar reuniones (actualiza la tarjeta)</li>
+          <li><strong>Reporte semanal:</strong> Descarga Excel con 5 hojas de resumen del onboarding</li>
+        </ul>
+      </div>
+
+      <div class="module-card" id="alertas">
+        <div class="module-card-header">
+          <div class="module-icon" style="background:#fff7ed">🔔</div>
+          <div><h3>Alertas</h3><span class="path">/app/alertas</span></div>
+        </div>
+        <p class="purpose">Centro de notificaciones automáticas generadas desde los datos del sistema.</p>
+        <ul class="feature-list">
+          <li><strong>Stock crítico:</strong> Inventario &lt;50% del óptimo (prioridad alta)</li>
+          <li><strong>Exceso de inventario:</strong> Stock &gt;130% del óptimo</li>
+          <li><strong>Ajuste de precio pendiente:</strong> Precio actual ≠ precio recomendado</li>
+          <li><strong>Variación de tipo de cambio:</strong> USD/BOB supera umbrales</li>
+          <li>Badge rojo en el menú con conteo de alertas activas</li>
+        </ul>
+      </div>
+
+      <div class="module-card" id="reportes">
+        <div class="module-card-header">
+          <div class="module-icon" style="background:#f0fdf4">📊</div>
+          <div><h3>Reportes</h3><span class="path">/app/reportes</span></div>
+        </div>
+        <p class="purpose">Generación de informes ejecutivos descargables en Excel.</p>
+        <ul class="feature-list">
+          <li>Reporte Ejecutivo Mensual, Análisis de Demanda, Inventario, Precios, Logístico, Financiero</li>
+          <li>Cada reporte genera un <code>.xlsx</code> con múltiples hojas</li>
+        </ul>
+      </div>
+
+      <div class="module-card" id="data">
+        <div class="module-card-header">
+          <div class="module-icon" style="background:#f8fafc">🗄️</div>
+          <div><h3>Data Structuring</h3><span class="path">/app/data-structuring</span></div>
+        </div>
+        <p class="purpose">Punto de entrada de datos reales. Carga tu archivo de ventas históricas.</p>
+        <ul class="feature-list">
+          <li>Acepta <code>.csv</code> y <code>.xlsx</code> — el sistema detecta el separador y las columnas automáticamente</li>
+          <li>Al cargar, actualiza TODO el sistema: productos, gráficas, alertas, badges del sidebar</li>
+          <li><strong>Descargar ejemplo:</strong> Excel de muestra con 96 filas, 4 productos, 2 años</li>
+        </ul>
+        <h3 style="font-size:13px;margin:12px 0 8px">Columnas reconocidas</h3>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Columna</th><th>Alternativas aceptadas</th></tr>
+            <tr><td><code>Fecha</code></td><td>fecha, Date, Mes, Month</td></tr>
+            <tr><td><code>Producto</code></td><td>producto, Product, Nombre, SKU, Item</td></tr>
+            <tr><td><code>Categoría</code></td><td>categoria, Category, Tipo</td></tr>
+            <tr><td><code>Cantidad_Vendida</code></td><td>Cantidad, Sales, Ventas, Units, Qty</td></tr>
+            <tr><td><code>Precio_Unitario_BOB</code></td><td>Precio_BOB, Precio, Price</td></tr>
+            <tr><td><code>Costo_Unitario_USD</code></td><td>Costo_USD, Costo, Cost</td></tr>
+            <tr><td><code>Stock_Al_Cierre</code></td><td>Stock_Final, Stock, Inventario</td></tr>
+            <tr><td><code>Lead_Time_Dias</code></td><td>LeadTime, Lead_Time</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="module-card" id="crudos">
+        <div class="module-card-header">
+          <div class="module-icon" style="background:#f8fafc">📄</div>
+          <div><h3>Datos Crudos</h3><span class="path">/app/datos-crudos</span></div>
+        </div>
+        <p class="purpose">Vista directa de todos los datos del sistema sin procesar.</p>
+        <ul class="feature-list">
+          <li><strong>Tab Productos:</strong> Cards/tabla con stock, óptimo, precio, costo, demanda y estado</li>
+          <li><strong>Tab Envíos:</strong> Lista de envíos con origen, destino, estado y progreso</li>
+          <li><strong>Tab Histórico:</strong> Preview de las primeras 20 filas del archivo cargado</li>
+          <li><strong>Restaurar demo:</strong> Vuelve a los datos estáticos de demostración</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="flujo">
+      <h2>Cómo fluyen los datos</h2>
+      <div class="flow">
+        <div class="flow-steps">
+          <div class="flow-step">📂 Archivo Excel / CSV</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">🗄️ Data Structuring<br><small style="opacity:.6;font-size:12px">parseFile + processRows</small></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">⚡ AppContext<br><small style="opacity:.6;font-size:12px">estado global React</small></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">🌐 Todo el sistema</div>
+        </div>
+        <div class="flow-outputs">
+          <div class="flow-output">Resumen</div>
+          <div class="flow-output">Demanda</div>
+          <div class="flow-output">Precios</div>
+          <div class="flow-output">Inventario</div>
+          <div class="flow-output">Alertas</div>
+          <div class="flow-output">Datos Crudos</div>
+          <div class="flow-output">Badges del sidebar</div>
+        </div>
+      </div>
+      <p>Sin Excel cargado → datos demo estáticos (4 productos, 3 envíos). Con Excel → todo el sistema se actualiza. Botón "Restaurar demo" en Datos crudos vuelve al estado inicial.</p>
+    </section>
+
+    <section id="estados">
+      <h2>Estados de inventario</h2>
+      <p>El sistema clasifica cada producto automáticamente. El <strong>stock óptimo</strong> = <code>promedio mensual de ventas × 1.5</code></p>
+      <div class="status-grid">
+        <div class="status-card s-red">   <div class="label">🔴 Crítico</div>  <div class="cond">Stock &lt; 50% del óptimo</div></div>
+        <div class="status-card s-yellow"><div class="label">🟡 Alerta</div>   <div class="cond">Stock 50–85% del óptimo</div></div>
+        <div class="status-card s-green"> <div class="label">🟢 Óptimo</div>   <div class="cond">Stock 85–130% del óptimo</div></div>
+        <div class="status-card s-orange"><div class="label">🟠 Exceso</div>   <div class="cond">Stock &gt; 130% del óptimo</div></div>
+      </div>
+    </section>
+
+    <section id="tech">
+      <h2>Tecnologías utilizadas</h2>
+      <div class="tech-grid">
+        <div class="tech-pill">⚛️ React + Vite</div>
+        <div class="tech-pill">🔀 React Router</div>
+        <div class="tech-pill">🎨 Tailwind CSS</div>
+        <div class="tech-pill">✨ Framer Motion</div>
+        <div class="tech-pill">📊 Recharts</div>
+        <div class="tech-pill">📗 SheetJS (xlsx)</div>
+        <div class="tech-pill">🚀 Netlify</div>
+      </div>
+      <div class="table-wrap" style="margin-top:20px">
+        <table>
+          <tr><th>Tecnología</th><th>Para qué se usa</th></tr>
+          <tr><td><strong>React + Vite</strong></td><td>Framework de interfaz de usuario, build rápido</td></tr>
+          <tr><td><strong>React Router</strong></td><td>Navegación entre páginas (HashRouter para SPA)</td></tr>
+          <tr><td><strong>Tailwind CSS</strong></td><td>Estilos y diseño responsive mobile-first</td></tr>
+          <tr><td><strong>Framer Motion</strong></td><td>Animaciones de scroll, drawers y transiciones</td></tr>
+          <tr><td><strong>Recharts</strong></td><td>Gráficas interactivas (líneas, áreas, barras, Pareto)</td></tr>
+          <tr><td><strong>SheetJS</strong></td><td>Lectura de Excel/CSV + exportación de todos los reportes</td></tr>
+          <tr><td><strong>Netlify</strong></td><td>Hosting y despliegue continuo</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <div class="cta-box">
+      <h3>Ver la aplicación en vivo</h3>
+      <p>Accedé a Forecast365 y probá todos los módulos con datos de demo o cargá tu propio Excel.</p>
+      <a class="cta-btn" href="https://forecast365.netlify.app" target="_blank">Abrir Forecast365 →</a>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

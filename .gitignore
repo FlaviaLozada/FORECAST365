@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+app/node_modules/
+docs-site/node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+
+# Claude internal
+.claude/
